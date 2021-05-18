@@ -1,13 +1,13 @@
-import flask
-from flask import request, jsonify
+from flask import Flask, request, jsonify, make_response
+from flask_expects_json import expects_json
 
-app = flask.Flask(__name__)
+app = Flask(__name__)
 app.config["DEBUG"] = True
 
-articles = [
+pages = [
             {
                 "name": "news_article_1",
-                "id": "0",
+                "id": "uk-1",
                 "components": [{
                     "name": "logo",
                     "location": "/path/to/logo"
@@ -15,7 +15,7 @@ articles = [
             },
             {
                 "name": "news_article_2",
-                "id": "1",
+                "id": "uk-2",
                 "components": [{
                     "name": "logo",
                     "location": "/path/to/logo"
@@ -23,7 +23,7 @@ articles = [
             },
             {
                 "name": "news_article_3",
-                "id": "2",
+                "id": "uk-3",
                 "components": [{
                     "name": "logo",
                     "location": "/path/to/logo"
@@ -31,7 +31,7 @@ articles = [
             },
             {
                 "name": "news_article_4",
-                "id": "3",
+                "id": "uk-4",
                 "components": [{
                     "name": "logo",
                     "location": "/path/to/logo"
@@ -39,30 +39,53 @@ articles = [
             }
         ]      
 
-id_count = 4
+schema = {
+    "type": "object",
+    "properties": {
+        "name": { "type": "string" },
+        "id": { "type": "string" },
+        "components": { "type": "array"}
+    },
+    "required": ["id"]
+}
 
-@app.route('/', methods=['GET', 'POST', 'PUT', 'DELETE'])
-def index():
-    global id_count
-    if request.method == "GET":
-        if 'id' in request.args:
-            for article in articles:
-                if article.get('id') == request.args.get('id'):
-                    return jsonify(article)    
-            return "Error - article not found"
-        else:
-            return jsonify(articles)
-    
-    elif request.method == "POST":
-        articles.append({
-            "name": "news_article_" + str(id_count + 1),
-                "id": str(id_count),
-                "components": [{
-                    "name": "logo",
-                    "location": "/path/to/logo"
-                }]
-        })
-        id_count += 1
-        return jsonify(articles)
+@app.route('/pages', methods=['GET'])
+def getAllPageConfigs():
+    return make_response(jsonify(pages), 200)
+
+@app.route('/pages/<id>', methods=['GET'])
+def getPageConfig(id):
+    for page in pages:
+        if page.get('id') == id:
+            return make_response(jsonify(page), 200)
+    return make_response(jsonify({"error": "page config not found"}), 404)
+
+@app.route('/pages', methods=['POST'])
+@expects_json(schema)
+def createPageConfig():
+    req = request.get_json()
+    if req in pages:
+        return make_response(jsonify({"error": "page config already exists"}), 400)
+    pages.append(req)
+    return make_response({"message": "page config added"}, 201)
+
+@app.route('/pages/<id>', methods=['PUT'])
+@expects_json(schema)
+def updatePageConfig(id):
+    req = request.get_json()
+    for index, page in enumerate(pages):
+        if page.get('id') == id:
+            pages[index] = req
+            return make_response({"message": "page config updated"}, 200)
+    pages.append(req)
+    return make_response({"message": "page config added"}, 201)
+
+@app.route('/pages/<id>', methods=['DELETE'])
+def deletePageConfig(id):
+    for index, page in enumerate(pages):
+        if page.get('id') == id:
+            pages.pop(index)
+            return make_response({"message": "page config deleted"}, 200)
+    return make_response({"error": "page config not found"}, 200)
 
 app.run()

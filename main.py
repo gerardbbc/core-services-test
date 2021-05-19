@@ -4,7 +4,7 @@ from flask_expects_json import expects_json
 app = Flask(__name__)
 app.config["DEBUG"] = True
 
-pages = [
+pageConfigs = [
             {
                 "name": "news_article_1",
                 "id": "uk-1",
@@ -46,45 +46,45 @@ schema = {
         "id": { "type": "string" },
         "components": { "type": "array"}
     },
-    "required": ["id"]
+    "required": ["id", "name", "components"]
 }
 
-@app.route('/pages', methods=['GET'])
+@app.route('/page-configs', methods=['GET'])
 def getAllPageConfigs():
-    return make_response(jsonify(pages), 200)
+    return make_response(jsonify(pageConfigs), 200)
 
-@app.route('/pages/<id>', methods=['GET'])
+@app.route('/page-configs/<id>', methods=['GET'])
 def getPageConfig(id):
-    for page in pages:
-        if page.get('id') == id:
-            return make_response(jsonify(page), 200)
+    for config in pageConfigs:
+        if config.get('id') == id:
+            return make_response(jsonify(config), 200)
     return make_response(jsonify({"error": "page config not found"}), 404)
 
-@app.route('/pages', methods=['POST'])
+@app.route('/page-configs', methods=['POST'])
 @expects_json(schema)
 def createPageConfig():
     req = request.get_json()
-    if req in pages:
+    if req in pageConfigs:
         return make_response(jsonify({"error": "page config already exists"}), 400)
-    pages.append(req)
+    pageConfigs.append(req)
     return make_response({"message": "page config added"}, 201)
 
-@app.route('/pages/<id>', methods=['PUT'])
+@app.route('/page-configs/<id>', methods=['PUT'])
 @expects_json(schema)
 def updatePageConfig(id):
     req = request.get_json()
-    for index, page in enumerate(pages):
-        if page.get('id') == id:
-            pages[index] = req
+    for index, config in enumerate(pageConfigs):
+        if config.get('id') == id:
+            pageConfigs[index] = req
             return make_response({"message": "page config updated"}, 200)
-    pages.append(req)
+    pageConfigs.append(req)
     return make_response({"message": "page config added"}, 201)
 
-@app.route('/pages/<id>', methods=['DELETE'])
+@app.route('/page-configs/<id>', methods=['DELETE'])
 def deletePageConfig(id):
-    for index, page in enumerate(pages):
+    for index, page in enumerate(pageConfigs):
         if page.get('id') == id:
-            pages.pop(index)
+            pageConfigs.pop(index)
             return make_response({"message": "page config deleted"}, 200)
     return make_response({"error": "page config not found"}, 200)
 

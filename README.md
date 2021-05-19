@@ -9,7 +9,7 @@ This is an API that stores a list of example page configs as a JSON object store
   - GET requests return a list of all page configs.
   - POST requests add a new page config to the list.
 
-- /pages/<id>:
+- /pages/`id`:
 
   - GET requests return the page config with the specified ID.
   - PUT requests update the page config with the specified ID.
